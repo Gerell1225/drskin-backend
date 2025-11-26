@@ -5,10 +5,8 @@ import { env } from "../env";
 
 export const qpay = Router();
 
-// helper
 const sanitize = (s: string, max = 45) => s.replace(/[^A-Za-z0-9_]/g, "").slice(0, max);
 
-/** Single invoice for whole order (partial refunds not supported) */
 qpay.post("/invoice", async (req, res) => {
   try {
     const { order_id } = req.body ?? {};
@@ -52,7 +50,6 @@ qpay.post("/invoice", async (req, res) => {
   }
 });
 
-/** Recommended: per-item invoice (supports partial refunds) */
 qpay.post("/invoice-item", async (req, res) => {
   try {
     const { item_id } = req.body ?? {};
@@ -90,7 +87,6 @@ qpay.post("/invoice-item", async (req, res) => {
       p_raw: invoice as any
     });
 
-    // attach item_id to that pending row
     await supabaseAdmin.from("payments").update({ item_id: item.id })
       .eq("order_id", item.order_id)
       .eq("provider", "qpay").eq("kind", "charge")
@@ -103,7 +99,6 @@ qpay.post("/invoice-item", async (req, res) => {
   }
 });
 
-/** QPay callback (verifies & writes paid rows; confirms order when fully paid) */
 qpay.post("/callback", async (req, res) => {
   try {
     const payment_id = (req.query.payment_id as string) || (req.body?.payment_id as string);
@@ -154,11 +149,10 @@ qpay.post("/callback", async (req, res) => {
     res.json({ ok: true, status: statusRaw });
   } catch (e: any) {
     console.error(e?.response?.data || e);
-    res.json({ ok: true, error: "callback_error" }); // 200 to stop retries
+    res.json({ ok: true, error: "callback_error" });
   }
 });
 
-/** Full refund by original payment id (order/item level) */
 qpay.post("/refund", async (req, res) => {
   try {
     const { payment_id, note } = req.body ?? {};
