@@ -44,4 +44,3 @@ export async function qpayRefund(paymentId, note, callback_url) {
     });
     return data;
 }
-//# sourceMappingURL=qpayClient.js.map
